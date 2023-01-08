@@ -9,7 +9,9 @@ let isReady: boolean;
 // Get the cache
 async function getCache(): Promise<RedisClientType> {
     if (!isReady) {
-        redisClient = createClient("redis://red-cesoo282i3mh51vaj0rg:6379");
+        redisClient = createClient({
+            url: "redis://red-cesoo282i3mh51vaj0rg:6379"
+        });
 
         redisClient.on("error", (error) => console.error(`redis error :', ${error}`));
         redisClient.on('connect', () => console.log('redis connected'));
