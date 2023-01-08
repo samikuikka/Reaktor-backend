@@ -22,6 +22,7 @@
     "express-xml-bodyparser": "^0.3.0",
     "http": "^0.0.1-security",
     "redis": "^4.5.1",
+    "socket.io": "^4.5.4",
     "xml-js": "^1.6.11",
     "zod": "^3.20.2"
   }

@@ -1,9 +1,10 @@
-import type { RedisClientType } from 'redis'
-import { createClient } from 'redis'
+import type { RedisClientType } from 'redis';
+import { createClient } from 'redis';
 import axios from 'axios';
+import { Pilot } from './types';
 
 let redisClient: RedisClientType
-let isReady: boolean;
+let isReady: boolean; 
 
 // Get the cache
 async function getCache(): Promise<RedisClientType> {
@@ -23,16 +24,38 @@ async function getCache(): Promise<RedisClientType> {
 }
 
 // Save the pilot (offender) to the cache
-async function savePilot(serialNumber: string) {
-    const pilotResponse = await axios.get(`https://assignments.reaktor.com/birdnest/pilots/${serialNumber}`)
-    const pilotData = pilotResponse.data;
-    const pilot = {
-        name: pilotData.firstName.concat(" ", pilotData.lastName),
-        phoneNumber: pilotData.phoneNumber,
-        email: pilotData.email
-    };
+async function savePilot(serialNumber: string, distance: number) {
+    try {
 
-    redisClient.setEx(`DRONE:${serialNumber}`, 600, JSON.stringify(pilot));
+        // Cache hit
+        const hit = await redisClient.get(serialNumber);
+
+        // If cache hit then serve the data from cache, if not then query the API
+        if (hit) {
+            const hitData = JSON.parse(hit);
+
+            const pilot: Pilot = {
+                ...hitData,
+                distance: Math.min(distance, hitData.distance)
+            }
+            
+            redisClient.setEx(serialNumber, 600, JSON.stringify(pilot));
+        } else {
+            const pilotResponse = await axios.get(`https://assignments.reaktor.com/birdnest/pilots/${serialNumber}`)
+            const pilotData = pilotResponse.data;
+
+            const pilot: Pilot = {
+                name: pilotData.firstName.concat(" ", pilotData.lastName),
+                phoneNumber: pilotData.phoneNumber,
+                email: pilotData.email,
+                distance
+            };
+
+            redisClient.setEx(serialNumber, 600, JSON.stringify(pilot));
+        }
+    } catch (err) {
+        console.error('Error retrieving pilot information')
+    }
 }
 
 
