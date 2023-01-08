@@ -6,7 +6,9 @@ const PORT = process.env.PORT || 4001;
 
 const server = http.createServer(app);
 const io = new Server(server, {
-    
+    cors: {
+        origin: "https://reaktor-frontend-l2w4.onrender.com"
+    }
 });
 
 io.on('connection', (socket) => {
