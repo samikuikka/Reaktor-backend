@@ -1,6 +1,6 @@
 import axios from 'axios';
 import convert from 'xml-js'
-import { savePilot } from './services/cache';
+import { getCache, savePilot } from './services/cache';
 import { distanceNDZ, broadcast } from './services/droneService'; 
 import { responseSchema, Drone } from './services/types';
 
@@ -28,6 +28,15 @@ export const retrieveDrones = async () => {
             // If too close to loons, then save the offender to the cache
             if(distance <= 100000) {
                 await savePilot(drone.serialNumber._text, distance);
+            } else {
+                
+                const cache = await getCache();
+
+                const hit = await cache.get(drone.serialNumber._text);
+                if(hit) {
+                    await cache.setEx(drone.serialNumber._text, 600, hit)
+                }
+                
             }
         }
 
@@ -38,5 +47,5 @@ export const retrieveDrones = async () => {
         console.log('Data is in unknown format')
     }
 
-    setTimeout(retrieveDrones, 5000)
+    setTimeout(retrieveDrones, 2000)
 }
